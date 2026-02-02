@@ -10,10 +10,9 @@ RUN \
     apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        gnupg \
-        apt-transport-https \
+        ca-certificates=20230311ubuntu0.22.04.1 \
+        gnupg=2.2.27-3ubuntu2.1 \
+        apt-transport-https=2.4.11 \
         binutils=2.34-6ubuntu1.11 \
         libcap2=1:2.32-1ubuntu0.2 \
         logrotate=3.14.0-4ubuntu3 \
@@ -26,7 +25,7 @@ RUN \
         > /etc/apt/sources.list.d/adoptium.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        temurin-25-jre \
+        temurin-25-jre=25.0.2+10-1~jammy \
     \
     && curl -J -L -o /tmp/unifi.deb \
         "https://dl.ui.com/unifi/10.1.83/unifi_sysvinit_all.deb" \
