@@ -2,8 +2,10 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/ubuntu-base:8.2.0
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
+# Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Setup base system
 RUN \
     apt-get update \
     && apt-get upgrade -y \
@@ -26,25 +28,27 @@ RUN \
     && apt-get install -y --no-install-recommends \
         temurin-25-jre \
     \
-    # Install UniFi 10.1
     && curl -J -L -o /tmp/unifi.deb \
         "https://dl.ui.com/unifi/10.1.83/unifi_sysvinit_all.deb" \
+    \
     && dpkg --install /tmp/unifi.deb \
     && apt-get -f install -y \
-    \
     && apt-get clean \
-    && rm -rf \
+    && rm -fr \
         /tmp/* \
         /var/cache/* \
         /var/lib/apt/lists/* \
         /var/log/*.log \
         /var/log/apt
 
+# Copy root filesystem
 COPY rootfs /
 
+# Health check
 HEALTHCHECK --start-period=5m \
     CMD curl --insecure --fail https://localhost:8443 || exit 1
 
+# Build arguments
 ARG BUILD_ARCH
 ARG BUILD_DATE
 ARG BUILD_DESCRIPTION
@@ -53,6 +57,7 @@ ARG BUILD_REF
 ARG BUILD_REPOSITORY
 ARG BUILD_VERSION
 
+# Labels
 LABEL \
     io.hass.name="${BUILD_NAME}" \
     io.hass.description="${BUILD_DESCRIPTION}" \
