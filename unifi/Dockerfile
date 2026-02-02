@@ -2,40 +2,49 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/ubuntu-base:8.2.0
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
-# Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Setup base system
 RUN \
     apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg \
+        apt-transport-https \
         binutils=2.34-6ubuntu1.11 \
         libcap2=1:2.32-1ubuntu0.2 \
         logrotate=3.14.0-4ubuntu3 \
         mongodb-server=1:3.6.9+really3.6.8+90~g8e540c0b6d-0ubuntu5.3 \
-        openjdk-17-jre-headless=17* \
     \
+    # Add Adoptium (Temurin) repo for Java 25
+    && curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public \
+        | gpg --dearmor -o /usr/share/keyrings/adoptium.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb jammy main" \
+        > /etc/apt/sources.list.d/adoptium.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        temurin-25-jre \
+    \
+    # Install UniFi 10.1
     && curl -J -L -o /tmp/unifi.deb \
-        "https://dl.ui.com/unifi/10.0.162/unifi_sysvinit_all.deb" \
-    \
+        "https://dl.ui.com/unifi/10.1.83/unifi_sysvinit_all.deb" \
     && dpkg --install /tmp/unifi.deb \
+    && apt-get -f install -y \
+    \
     && apt-get clean \
-    && rm -fr \
+    && rm -rf \
         /tmp/* \
         /var/cache/* \
         /var/lib/apt/lists/* \
         /var/log/*.log \
         /var/log/apt
 
-# Copy root filesystem
 COPY rootfs /
 
-# Health check
 HEALTHCHECK --start-period=5m \
     CMD curl --insecure --fail https://localhost:8443 || exit 1
 
-# Build arguments
 ARG BUILD_ARCH
 ARG BUILD_DATE
 ARG BUILD_DESCRIPTION
@@ -44,7 +53,6 @@ ARG BUILD_REF
 ARG BUILD_REPOSITORY
 ARG BUILD_VERSION
 
-# Labels
 LABEL \
     io.hass.name="${BUILD_NAME}" \
     io.hass.description="${BUILD_DESCRIPTION}" \
